@@ -1,0 +1,47 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.next/
+.venv/
+__pycache__/
+*.pyc
+
+# Local environment and logs
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.log
+
+# Local credentials and private environment exports (never commit)
+*.env
+*.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Machine-local agent and dashboard metadata (kept outside source)
+.kalyug*
+.opencode/
+.hermes/
+.claude/
+.mcp.json
+mcp.json
+mcp-config.json
+mcp_client.py
+AGENTS.md
+CLAUDE.md
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

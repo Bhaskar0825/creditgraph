@@ -1,0 +1,14 @@
+{
+  "databaseId": "creditgraph",
+  "tables": ["entities", "events", "relationships", "reviews", "runs"],
+  "permissions": [],
+  "rowSecurity": true,
+  "columns": [
+    {"key":"owner","type":"varchar","size":128,"required":true,"array":false,"encrypt":false},
+    {"key":"kind","type":"varchar","size":64,"required":true,"array":false,"encrypt":false},
+    {"key":"payload","type":"longtext","required":true,"array":false,"encrypt":true}
+  ],
+  "rowPermissions": [],
+  "indexes": [{"key":"owner_lookup","type":"key","columns":["owner"],"orders":["asc"]}],
+  "function": {"id":"creditgraph-api","runtime":"python-3.14","entrypoint":"src/main.py","commands":"python -m compileall -q src","timeout":30,"execute":["any"],"scopes":["rows.read","rows.write","tables.read"]}
+}
