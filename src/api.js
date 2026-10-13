@@ -84,7 +84,7 @@ export function createCloudClient({ endpoint = publicConfig.endpoint, projectId 
   } catch { fallback = ''; sessionStore = null; }
 
   async function request(path, { method = 'GET', body } = {}) {
-    if (!projectId) throw new Error('Cloud workspace is not configured. Set the public Appwrite project ID during deployment. The historical demo still works.');
+    if (!endpoint || !projectId) throw new Error('Cloud workspace is not configured. Set the public Appwrite endpoint and project ID during deployment. The historical demo still works.');
     const headers = { 'Content-Type': 'application/json', 'X-Appwrite-Project': projectId, 'X-Appwrite-Response-Format': '1.8.0' };
     if (fallback) headers['X-Fallback-Cookies'] = fallback;
     let response;

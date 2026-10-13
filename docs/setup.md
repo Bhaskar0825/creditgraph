@@ -99,7 +99,7 @@ In your Appwrite project:
 
 1. Add a **Web platform** for each frontend hostname you will use. Register `localhost` for local development, and your own deployed hostname separately; register any other development hostname you actually use.
 2. Enable **anonymous sessions** in the project's authentication settings. The app first reuses an existing Appwrite account session, or creates an anonymous one when the account request returns 401.
-3. Use the project's API endpoint, including `/v1`, and project ID from the Console. Do not use a Console page URL as the API endpoint.
+3. Use the project's API endpoint, including `/v1`, and project ID from the Console. Do not use a Console page URL as the API endpoint. Neither value is built into the app; cloud requests are blocked until both are configured.
 
 Anonymous sessions provide a private workspace tied to a browser identity, not durable account enrollment or enterprise SSO. Clearing cookies/session storage or changing browser profiles may lose access. The app does not include recovery or account management.
 
