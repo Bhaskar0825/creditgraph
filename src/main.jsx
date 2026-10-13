@@ -1,8 +1,10 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
+import '@fontsource/geist/latin-400.css';
+import '@fontsource/geist/latin-500.css';
+import '@fontsource/geist/latin-600.css';
 import App from './App.jsx';
 import './styles.css';
-
 class ErrorBoundary extends React.Component {
   state = { error: false };
   static getDerivedStateFromError() { return { error: true }; }
@@ -12,5 +14,5 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-
-createRoot(document.getElementById('root')).render(<React.StrictMode><ErrorBoundary><App /></ErrorBoundary></React.StrictMode>);
+document.documentElement.classList.add('dark');
+ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode><ErrorBoundary><App /></ErrorBoundary></React.StrictMode>);

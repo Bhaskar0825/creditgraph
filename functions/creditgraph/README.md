@@ -210,7 +210,7 @@ From the repository root, with Python 3.12 (local verification used 3.12.3):
 python3 -B -m unittest discover -s tests -p 'python*.py' -v
 ```
 
-No pip installation or provider configuration is required. The current backend baseline is **40 passing tests**. Tests exercise the real extractor, action boundary, storage and provider adapters; integration cases substitute only the HTTP transport. urllib behavior also runs against a real loopback HTTP server. Run the frontend tests separately with `npm test` (36 passing tests in the checked baseline).
+No pip installation or provider configuration is required. The current backend baseline is **40 passing tests**. Tests exercise the real extractor, action boundary, storage and provider adapters; integration cases substitute only the HTTP transport. urllib behavior also runs against a real loopback HTTP server. Run the frontend tests separately with `npm test` (41 passing tests in the checked baseline).
 
 A deployment owner must separately verify:
 

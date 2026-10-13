@@ -1,57 +1,99 @@
-import React, { useEffect, useRef } from 'react';
-import cytoscape from 'cytoscape';
-import { Focus, Minus, Plus, ArrowUpRight } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ReactFlow, Controls, MarkerType } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { ArrowUpRight } from 'lucide-react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { buildGraphLayout } from './graph-layout.js';
 
-export default function Graph({ entities, relationships, events, onSelect, compact = false }) {
+const fitOptions = { padding: 0.12, minZoom: 0.85, maxZoom: 1 };
+const nodeStyle = { background: '#fff', color: '#000', border: '2px solid #000', borderRadius: 8, padding: 16, textAlign: 'left', boxShadow: 'none', fontSize: 18 };
+
+export default function Graph({ entities = [], relationships = [], events = [], onSelect, compact = false }) {
   const container = useRef(null);
-  const graph = useRef(null);
-  const select = useRef(onSelect);
-  const visibleIds = new Set(entities.map((entity) => entity.id));
-  const visibleRelationships = relationships.filter((edge) => visibleIds.has(edge.sourceId) && visibleIds.has(edge.targetId));
-  select.current = onSelect;
+  const [flow, setFlow] = useState(null);
+  const model = useMemo(() => buildGraphLayout({ entities, relationships, events, compact }), [entities, relationships, events, compact]);
+  const names = useMemo(() => new Map(entities.map((entity) => [entity.id, entity.name])), [entities]);
+  const nodes = useMemo(() => model.nodes.map((node) => ({
+    ...node,
+    type: 'default',
+    draggable: false,
+    connectable: false,
+    deletable: false,
+    focusable: true,
+    ariaLabel: `${node.data.name}. ${node.data.role}. Open company profile.`,
+    domAttributes: {
+      onKeyDown: (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(node.id);
+        }
+      },
+    },
+    style: { ...nodeStyle, width: node.width, height: node.height },
+    data: { ...node.data, label: <div style={{ display: 'flex', flexDirection: 'column', gap: 5, overflowWrap: 'anywhere', whiteSpace: 'normal' }}>
+      <strong style={{ fontSize: 18, lineHeight: '24px' }}>{node.data.name}</strong>
+      <span style={{ fontSize: 14, lineHeight: '20px' }}>{node.data.role}</span>
+      {node.data.eventSubject && <span style={{ fontSize: 14, lineHeight: '18px', fontWeight: 600 }}>Event subject</span>}
+      {node.data.documentEntity && <span style={{ fontSize: 14, lineHeight: '18px', fontWeight: 600 }}>Rated / report entity</span>}
+    </div> },
+  })), [model, onSelect]);
+  const edges = useMemo(() => model.edges.map((edge) => ({
+    ...edge,
+    type: 'smoothstep',
+    animated: false,
+    deletable: false,
+    reconnectable: false,
+    selectable: false,
+    focusable: false,
+    markerEnd: { type: MarkerType.ArrowClosed, color: '#ccc', width: 20, height: 20 },
+    style: { stroke: '#ccc', strokeWidth: 2 },
+    labelStyle: { fill: '#000', fontSize: 16, fontWeight: 600 },
+    labelBgStyle: { fill: '#fff', fillOpacity: 1 },
+    labelBgPadding: [8, 6],
+    labelBgBorderRadius: 3,
+  })), [model]);
+
   useEffect(() => {
-    const ids = new Set(entities.map((entity) => entity.id));
-    const affected = new Set(events.filter((event) => event.status !== 'dismissed').map((event) => event.entityId));
-    const cy = cytoscape({
-      container: container.current,
-      elements: [
-        ...entities.map((entity) => ({ data: { id: entity.id, label: entity.name.replace(/ Limited| Ltd\.?| Corporation/g, '').replace(/\s/g, '\n'), affected: affected.has(entity.id) ? 1 : 0, issuer: events.some((event) => event.documentIssuerId === entity.id) ? 1 : 0 } })),
-        ...relationships.filter((edge) => ids.has(edge.sourceId) && ids.has(edge.targetId)).map((edge, index) => ({ data: { id: `edge-${edge.id || index}`, source: edge.sourceId, target: edge.targetId, label: (edge.type || 'relationship').replaceAll('_', ' ') } })),
-      ],
-      style: [
-        { selector: 'node', style: { 'background-color': '#137b73', width: compact ? 29 : 42, height: compact ? 29 : 42, 'border-width': 6, 'border-color': '#dcefeb', label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': 110, 'font-family': 'Arial, sans-serif', 'font-size': compact ? 10 : 12, 'font-weight': 600, color: '#293d4b', 'text-valign': 'bottom', 'text-margin-y': 10 } },
-        { selector: 'node[affected = 1]', style: { 'background-color': '#d39733', 'border-color': '#f7ebd5' } },
-        { selector: 'node[issuer = 1]', style: { 'background-color': '#263e54', 'border-color': '#e1e8ed' } },
-        { selector: 'edge', style: { width: 1.5, 'line-color': '#b6c8cb', 'target-arrow-color': '#b6c8cb', 'target-arrow-shape': 'triangle', 'curve-style': 'bezier', label: compact ? '' : 'data(label)', 'font-size': 9, 'text-rotation': 'autorotate', 'text-background-color': '#f8faf9', 'text-background-opacity': 1, 'text-background-padding': 3, color: '#71828b' } },
-        { selector: 'node:selected', style: { 'border-color': '#88bfb5', 'border-width': 9 } },
-      ],
-      layout: { name: 'circle', padding: compact ? 48 : 70, startAngle: -Math.PI / 2, avoidOverlap: true },
-      minZoom: 0.35, maxZoom: 2.4,
-      userZoomingEnabled: !compact, userPanningEnabled: !compact,
-    });
-    graph.current = cy;
-    cy.on('tap', 'node', (event) => select.current(event.target.id()));
-    const observer = new ResizeObserver(() => { cy.resize(); cy.fit(undefined, compact ? 48 : 70); });
+    if (!flow || !container.current) return undefined;
+    let frame;
+    const fit = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => flow.fitView(fitOptions));
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
     observer.observe(container.current);
-    return () => { observer.disconnect(); cy.destroy(); graph.current = null; };
-  }, [entities, relationships, events, compact]);
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+  }, [flow, model]);
 
   return <div className={`graph-module ${compact ? 'compact' : ''}`}>
-    <div className="graph-canvas" ref={container} role="img" aria-label="Evidence relationship graph. Use the company buttons and relationship list below for keyboard access." />
-    {!compact && <div className="graph-tools" aria-label="Graph controls">
-      <button className="icon-button" aria-label="Zoom in graph" onClick={() => graph.current?.zoom(graph.current.zoom() * 1.2)}><Plus size={16} /></button>
-      <button className="icon-button" aria-label="Zoom out graph" onClick={() => graph.current?.zoom(graph.current.zoom() / 1.2)}><Minus size={16} /></button>
-      <button className="icon-button" aria-label="Fit graph" onClick={() => graph.current?.fit(undefined, 70)}><Focus size={16} /></button>
-    </div>}
-    <div className="graph-legend"><span><i className="legend-dot teal" />Company</span><span><i className="legend-dot amber" />Event subject</span><span><i className="legend-dot navy" />Rated / report entity</span></div>
-    <details className="graph-accessible" open={!compact}>
-      <summary>Explore companies & source-linked relationships</summary>
-      <div className="entity-chips">{entities.map((entity) => <button key={entity.id} onClick={() => onSelect(entity.id)}>{entity.name}<ArrowUpRight size={12} /></button>)}</div>
-      {!compact && <ul className="edge-list">{visibleRelationships.map((edge) => <li key={edge.id}>
-        <span><strong>{entities.find((e) => e.id === edge.sourceId)?.name || edge.sourceId}</strong> <span className="muted">→ {(edge.type || 'relationship').replaceAll('_', ' ')} →</span> <strong>{entities.find((e) => e.id === edge.targetId)?.name || edge.targetId}</strong></span>
-        {edge.quote && <q>{edge.quote}</q>}
-        {/^https?:\/\//.test(edge.sourceUrl || '') && <a href={edge.sourceUrl} target="_blank" rel="noreferrer">View relationship source <ArrowUpRight size={12} /></a>}
-      </li>)}{!visibleRelationships.length && <li>No documented relationships in this view.</li>}</ul>}
-    </details>
+    {!entities.length ? <div className="graph-empty" role="status" style={{ padding: 32, color: '#000', background: '#fff', fontSize: 18 }}>
+      <strong>No companies match this view.</strong>
+      <p>Clear your search or change the filters to explore documented relationships.</p>
+    </div> : <>
+      <div className="graph-canvas" ref={container} aria-label="Documented company relationships" style={{ background: '#000', color: '#fff' }}>
+        <ReactFlow
+          nodes={nodes} edges={edges} onInit={setFlow}
+          onNodeClick={(_, node) => onSelect(node.id)}
+          nodesDraggable={false} nodesConnectable={false} edgesReconnectable={false}
+          deleteKeyCode={null} selectionKeyCode={null} multiSelectionKeyCode={null}
+          nodesFocusable edgesFocusable={false}
+          minZoom={0.3} maxZoom={2} fitView fitViewOptions={fitOptions}
+          colorMode="dark" attributionPosition="bottom-right"
+        >
+          <Controls showInteractive={false} fitViewOptions={fitOptions} position="top-right" />
+        </ReactFlow>
+      </div>
+      <p className="graph-legend" style={{ color: '#bbb', fontSize: 14 }}>Arrows show documented relationships, not transferred risk. Pan to explore; use + / − to zoom. Select a company to open its profile.</p>
+      <Accordion type="single" collapsible className="graph-accessible" defaultValue={compact ? undefined : 'relationships'}><AccordionItem value="relationships"><AccordionTrigger>Explore companies &amp; source-linked relationships</AccordionTrigger><AccordionContent>
+        <div className="entity-chips">{entities.map((entity) => <Button variant="outline" key={entity.id} onClick={() => onSelect(entity.id)}>{entity.name}<ArrowUpRight size={14} /></Button>)}</div>
+        <ul className="edge-list">{model.relationships.map((edge, index) => <li key={edge.id || index}>
+          <span><strong>{names.get(edge.sourceId)}</strong> → {(edge.type || 'relationship').replaceAll('_', ' ')} → <strong>{names.get(edge.targetId)}</strong></span>
+          {edge.quote && <q>{edge.quote}</q>}
+          {/^https?:\/\//.test(edge.sourceUrl || '') && <a href={edge.sourceUrl} target="_blank" rel="noreferrer">{edge.sourceTitle || 'View relationship source'} <ArrowUpRight size={16} /></a>}
+        </li>)}{!model.relationships.length && <li>No documented relationships in this view.</li>}</ul>
+      </AccordionContent></AccordionItem></Accordion>
+    </>}
   </div>;
 }

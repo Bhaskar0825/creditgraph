@@ -6,6 +6,14 @@ CreditGraph brings public disclosures, company relationships and local positions
 
 This is a review prototype, **not a credit rating, default probability, loss forecast or investment recommendation**. The included replay is historical; it is not a live monitoring feed.
 
+## Open-source interface
+
+The application adapts the official **[shadcn/ui dashboard-01](https://ui.shadcn.com/blocks)** layout, including its collapsible sidebar, metric-card grid and inset content structure. Controls, tables, tabs, sheets, accordions and tooltips come from the official shadcn registry, backed by Radix. The upstream license and adaptation notes are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+**React Flow** renders the interactive evidence graph and **Dagre** computes node positions. **Lucide** supplies icons. **Geist** is bundled locally through Fontsource, with no external font request. Mantine is no longer used.
+
+The neutral black-and-white interface uses compact 14px body text, a 24px page heading, consistent card padding and tabular financial values. Desktop navigation collapses to an icon rail; mobile navigation opens in a sheet. Tables scroll within their panels. Sidebar, sheet, tab and page transitions respect reduced-motion preferences. The relationship accordion keeps source quotations accessible without requiring canvas interaction. These are interface libraries, not evidence sources or risk models.
+
 ## Start here: no-key demo
 
 From a checkout of this repository:
@@ -226,7 +234,7 @@ python3 -B -m unittest discover -s tests -p 'python*.py' -v
 npm run build
 ```
 
-The checked baseline is **36 passing JavaScript tests and 40 passing Python tests**. These cover CSV/money handling, review priority, historical fixtures, client payloads, extraction, storage/ownership logic and provider adapters. Backend integration tests substitute HTTP transport; separate urllib tests use a real loopback server. They do **not** prove a live Appwrite installation, paid-provider connectivity or model quality.
+The checked baseline is **41 passing JavaScript tests and 40 passing Python tests**. These cover CSV/money handling, review priority, historical fixtures, client payloads, extraction, storage/ownership logic and provider adapters. Backend integration tests substitute HTTP transport; separate urllib tests use a real loopback server. They do **not** prove a live Appwrite installation, paid-provider connectivity or model quality.
 
 Manual demo smoke check: import the sample CSV, reimport it and confirm no double counting; try a conflicting duplicate and confirm the book is unchanged; approve and reopen evidence; open graph details; download a brief; reload and confirm the demo resets. Inspect browser network requests during an import to verify that the file is not uploaded.
 
