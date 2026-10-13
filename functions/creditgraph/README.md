@@ -1,6 +1,6 @@
 # CreditGraph Appwrite Function
 
-Python backend for private evidence workspaces, analyst reviews and optional public-source collection. The React demo runs without this Function; follow the [main README](../../README.md) for the no-key quickstart and frontend setup.
+Python backend for private evidence workspaces, analyst reviews and optional public-source collection. The React demo runs without this Function; follow the [main README](../../README.md) for the no-key quickstart and [setup guide](../../docs/setup.md) for frontend and cloud configuration.
 
 The Function uses **TablesDB**, not legacy collections/documents. It does not create its schema, seed reference data or accept portfolio uploads.
 
@@ -22,7 +22,7 @@ Wait for all columns and indexes to become **available/ready**, then read their 
 
 Each row stores `{owner, kind, payload}`, where `payload` is a serialized JSON object. The application caps that string at **60,000 UTF-8 bytes**. `owner` and `kind` remain unencrypted routing metadata; Appwrite's configured payload encryption is at-rest protection, not end-to-end secrecy from the server administrator.
 
-Seed the three public reference tables using the runnable Node export and exact Console/SDK mapping in [Public reference records](../../README.md#3-seed-the-public-reference-records). Use each fixture's `id` as the row ID, `owner: "public"`, `kind` equal to the table name and `payload: JSON.stringify(item)`. The current export yields 3 entities, 3 events and 2 relationships. Never seed `reviews` or `runs` as public, and never copy `SAMPLE_CSV` into cloud storage. Public rows are shared only through the authenticated Function, not via public table permissions.
+Seed the three public reference tables using the runnable Node export and exact Console/SDK mapping in [Public reference records](../../docs/setup.md#3-seed-the-public-reference-records). Use each fixture's `id` as the row ID, `owner: "public"`, `kind` equal to the table name and `payload: JSON.stringify(item)`. The current export yields 3 entities, 3 events and 2 relationships. Never seed `reviews` or `runs` as public, and never copy `SAMPLE_CSV` into cloud storage. Public rows are shared only through the authenticated Function, not via public table permissions.
 
 ### Function settings
 
